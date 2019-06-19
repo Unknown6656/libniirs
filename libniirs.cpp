@@ -277,24 +277,25 @@ private:
 
 const int main(const int argc, const char** argv)
 {
-    if (argc < 2)
+    if (argc < 3)
     {
-        std::cout << "At least one parameter is required (the directory path)";
+        std::cout << "At least two parameters are required (the input and output directories).";
 
         return -1;
     }
 
-    const std::string dir = argv[1];
-    const std::string csv_path = argc > 2 ? argv[2] : "niirs_levels.csv";
+    const std::string dir_in = argv[1];
+    const std::string dir_out = argv[2];
+    const std::string csv_path = dir_out + "/niirs_levels.csv";
     const std::regex reg("\\$PNIRS,\\d+,([0-9\\.]+),");
     std::smatch match;
     std::ofstream csv(csv_path);
     CNiirsMetric metric;
 
-    for (const auto& entry : fs::directory_iterator(dir))
+    for (const auto& entry : fs::directory_iterator(dir_in))
     {
         const fs::path path = entry.path();
-        const std::string opath = dir + "/" + path.filename().generic_string() + "--annotated" + path.extension().generic_string();
+        const std::string opath = dir_out + "/" + path.filename().generic_string() + "--annotated" + path.extension().generic_string();
         const Mat frame = imread(path.generic_string());
 
         std::cout << "Reading \"" << path << "\"..." << std::endl;
