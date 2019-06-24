@@ -175,13 +175,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="libniirs.cpp" />
+    <ClCompile Include="cniirsmetric.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="bin\.gitignore" />
     <None Include="bin\opencv_world410.dll" />
     <None Include="bin\opencv_world410d.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cniirsmetric.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

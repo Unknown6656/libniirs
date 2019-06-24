@@ -1,8 +1,5 @@
 #include <iostream>
-#include <fstream>
-#include <filesystem>
 #include <string>
-#include <regex>
 #include <math.h>
 
 #include <opencv2/opencv.hpp>
@@ -21,7 +18,6 @@
 
 
 using namespace cv;
-namespace fs = std::experimental::filesystem;
 
 
 const Mat hDiff = (Mat_<char>(1, 2) << 1, -1);
@@ -273,70 +269,3 @@ private:
         return -0.26 + 3 * pow(fr, 0.25);
     }
 };
-
-
-const int main(const int argc, const char** argv)
-{
-    if (argc < 3)
-    {
-        std::cout << "At least two parameters are required (the input and output directories).";
-
-        return -1;
-    }
-
-    const std::string dir_in = argv[1];
-    const std::string dir_out = argv[2];
-    const std::string csv_path = dir_out + "/niirs_levels.csv";
-    const std::regex reg("\\$PNIRS,\\d+,([0-9\\.]+),");
-    std::smatch match;
-    std::ofstream csv(csv_path);
-    CNiirsMetric metric;
-
-    for (const auto& entry : fs::directory_iterator(dir_in))
-    {
-        const fs::path path = entry.path();
-        const std::string opath = dir_out + "/" + path.filename().generic_string() + "--annotated" + path.extension().generic_string();
-        const Mat frame = imread(path.generic_string());
-
-        std::cout << "Reading \"" << path << "\"..." << std::endl;
-
-        if (frame.empty())
-        {
-            std::cout << "Unable to read \"" << path << "\"." << std::endl;
-
-            continue;
-        }
-
-        std::ifstream img(path);
-        std::vector<char> buffer(2048);
-
-        img.read(&buffer[0], buffer.size());
-
-        for (int i = 0, l = buffer.size(); i < l; ++i)
-            if (!buffer[i])
-                buffer[i] = ' ';
-
-        const std::string binary(buffer.begin(), buffer.end());
-        std::regex_search(binary, match, reg);
-
-        img.close();
-
-        const double pniirs = atof(match[1].str().c_str());
-
-        std::cout << "   P-NIIRS for \"" << path << "\": " << pniirs << std::endl;
-
-        const double niirs = metric.calculate_absolute(frame, pniirs);
-
-        std::cout << "     NIIRS for \"" << path << "\": " << pniirs << std::endl;
-        csv << "\"" << path << "\"," << niirs << std::endl;
-
-        putText(frame, "NIIRS: " + std::to_string(niirs), Point(), FONT_HERSHEY_SIMPLEX, 1, (0xff, 0, 0));
-        imwrite(opath, frame);
-    }
-
-    csv.close();
-
-    std::cout << "Results written to \"" << csv_path << "\"." << std::endl;
-
-    return 0;
-}

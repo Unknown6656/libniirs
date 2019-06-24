@@ -7,7 +7,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="libniirs.cpp">
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cniirsmetric.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -16,5 +19,8 @@
     <None Include="bin\opencv_world410d.dll" />
     <None Include=".gitignore" />
     <None Include="bin\.gitignore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cniirsmetric.h" />
   </ItemGroup>
 </Project>
