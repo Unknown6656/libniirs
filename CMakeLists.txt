@@ -7,13 +7,13 @@ find_package(OpenCV REQUIRED )
 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
-add_executable(${PROJECT_NAME}
-    "libniirs.cpp")
+#add_executable(${PROJECT_NAME}
+#    "libniirs.cpp")
 
 
-#add_executable(${PROJECT_NAME} "cniirsmetric.cpp"
-#    "cniirsmetric.h"
-#    "main.cpp"
+add_executable(${PROJECT_NAME} "cniirsmetric.cpp"
+    "cniirsmetric.h"
+    "main.cpp")
 #    "libniirs.cpp")
 
 target_link_libraries( ${PROJECT_NAME} ${OpenCV_LIBS} )

@@ -10,8 +10,6 @@
 //
 #define NIIRS_MIN 3.004
 #define NIIRS_MAX 4.48925
-#define NVG_MIN 3.65727
-#define NVG_MAX 85.3053
 #define EIR_MIN 3.18458
 #define EIR_MAX 14.9964
 #define FR_MIN 1.31376e-005
@@ -64,8 +62,8 @@ double CNiirsMetric::RER_BM(Mat &frame) {
     double sVVer = cv::sum(dVVer)[0];
     double sVHor = cv::sum(dVHor)[0];
 
-    double bFVer = (sFVer - sVVer) / sFVer;
-    double bFHor = (sFHor - sVHor) / sFHor;
+    double bFVer = (sFVer == 0) ? 0 : (sFVer - sVVer) / sFVer;
+    double bFHor = (sFHor == 0) ? 0 : (sFHor - sVHor) / sFHor;
 
     double BM = bFVer > bFHor ? bFVer : bFHor;
     return 1.17 - 1.15 * BM;
@@ -94,8 +92,6 @@ double CNiirsMetric::RER_EI(Mat &frame) {
 }
 
 double CNiirsMetric::RER_FR(Mat &I) {
-    //qDebug() << "Mat size: " << I.cols << " " << I.rows << "\n";
-
     int windowsize = 1;
     while (windowsize < I.rows && windowsize < I.cols) {
         windowsize <<= 1;
@@ -129,9 +125,6 @@ double CNiirsMetric::RER_FR(Mat &I) {
 
     //qDebug() << "normSquareI range: " << min << " " << max << "\n";
 
-    //imshow("Trump Vision", normSquareI);// Show the result
-
-
     Mat q0(normSquareI, Rect(0, 0, lowPassSize, lowPassSize)); // Top-Left - Create a ROI per quadrant
     Mat q1(normSquareI, Rect(windowsize - lowPassSize, 0, lowPassSize, lowPassSize)); // Top-Right
     Mat q2(normSquareI, Rect(0, windowsize - lowPassSize, lowPassSize, lowPassSize)); // Top-Left - Create a ROI per quadrant
@@ -144,11 +137,7 @@ double CNiirsMetric::RER_FR(Mat &I) {
     //+ cv::sum(q3)[0];
     double allPass = cv::sum(normSquareI)[0];
     double highPass = allPass - lowPass;
-    double fr = highPass / lowPass;
-
-    //qDebug() << "Freq ratios: " << lowPass << " " << allPass << " " << highPass << " " << (highPass / lowPass);
-    //imshow("spectrum magnitude", magI);
-    //return fr;
+    double fr = (lowPass == 0) ? 0 : highPass / lowPass;
     return -0.26 + 3 * pow(fr, 0.25);
 }
 
@@ -219,13 +208,7 @@ double CNiirsMetric::normalize(double value, double min_bound, double max_bound)
     return mapped;
 }
 
-
-int CNiirsMetric::calculate(Mat &colorFrame) {
-    return (int) calculate_double(colorFrame);
-}
-
-
-double CNiirsMetric::calculate_double(Mat &colorFrame) {
+double CNiirsMetric::calculate(Mat &colorFrame) {
     // MISB metrics use grayscale
 
     Mat frame;
@@ -254,7 +237,7 @@ double CNiirsMetric::calculate_absolute(Mat &colorFrame, double fov_horizontal, 
     double gsd_max = (fov_horizontal > fov_vertical) ? fov_horizontal / res_horizontal : fov_vertical / res_vertical;
 
     // Calculate MISB-like blur metrics
-    double blurriness = calculate_double(colorFrame); // [0..3]
+    double blurriness = calculate(colorFrame); // [0..3]
 
     // Bring into absulte form
     double niirs_misb = 5.0 - log2(gsd_max) - blurriness;
@@ -264,7 +247,7 @@ double CNiirsMetric::calculate_absolute(Mat &colorFrame, double fov_horizontal, 
 
 
 double CNiirsMetric::calculate_absolute(Mat &colorFrame, double pniirs_theoretical) {
-    double blurriness = calculate_double(colorFrame); // [0..3]
+    double blurriness = calculate(colorFrame); // [0..3]
     // Bring into absulte form
     double niirs_misb = pniirs_theoretical - blurriness;
     return niirs_misb;

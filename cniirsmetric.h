@@ -15,7 +15,7 @@ CNiirsMetric();
  * Returns:
  * The quality estimate. Range: 0 (best) to -3 (worst).
  */
-int calculate(cv::Mat &colorFrame);
+double calculate(cv::Mat &colorFrame);
 
 /* Estimates instantaneous Video-NIIRS level of the frame provided. Uses information about the current field-of-view of the observer to calculate the absolute Ground Resolvable Distance (GRD) and returns the associated (logarithmic) NIIRS level.
  *
@@ -33,7 +33,6 @@ double calculate_absolute(cv::Mat &colorFrame, double fov_horizontal, double fov
 double calculate_absolute(cv::Mat &colorFrame, double pniirs_theoretical);
 
 private:
-double calculate_double(cv::Mat&);
 double RER_BM(cv::Mat&);
 double RER_EI(cv::Mat&);
 double RER_FR(cv::Mat&);

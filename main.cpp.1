@@ -12,6 +12,7 @@
 
 // #include "libniirs.cpp"
 #include "cniirsmetric.h"
+#include "cniirsmetric.cpp"
 
 using namespace cv;
 namespace fs = std::experimental::filesystem;
@@ -21,6 +22,7 @@ const int main(const int argc, const char** argv)
     if (argc < 3)
     {
         std::cout << "At least two parameters are required (the input and output directories).";
+
         return -1;
     }
 
@@ -37,7 +39,7 @@ const int main(const int argc, const char** argv)
     {
         const fs::path path = entry.path();
         const std::string opath = dir_out + "/" + path.filename().generic_string() + "--annotated" + path.extension().generic_string();
-        Mat frame = imread(path.generic_string());
+        const Mat frame = imread(path.generic_string());
 
         std::cout << "Reading \"" << path << "\"..." << std::endl;
 
@@ -68,14 +70,15 @@ const int main(const int argc, const char** argv)
         if ((int)pniirs)
         {
             std::cout << "   P-NIIRS for \"" << path << "\": " << pniirs << std::endl;
+
             niirs = metric.calculate_absolute(frame, pniirs);
         }
         else
         {
             std::cout << "could not find $PNIRS-metadata entry. Looking for world file instead ..." << std::endl;
-            std::string wld_path = dir_in + path.filename().generic_string();
+            std::string wld_path = path.generic_string() + "/../" + path.filename().generic_string();
 
-            wld_path = wld_path.replace(wld_path.length() - path.extension().generic_string().length(), path.extension().generic_string().length() + 1, ".wld");
+            wld_path = wld_path.replace(wld_path.length() - 1 - path.extension().generic_string().length(), path.extension().generic_string().length(), ".wld");
 
             std::cout << "     opening \"" << wld_path << "\"..." << std::endl;
             std::ifstream wld_fs(wld_path);
@@ -97,8 +100,8 @@ const int main(const int argc, const char** argv)
 
             wld_fs.close();
 
-            // 1lat == 111.111km
-            // 1lon == 111.111 * cos(1rad lat)
+            // 1°lat == 111.111km
+            // 1°lon == 111.111 * cos(1rad lat)
             const double delta_lat1 = std::abs(coord[0] - coord[2]) * 111111;
             const double delta_lat2 = std::abs(coord[6] - coord[4]) * 111111;
             const double delta_lon1 = std::abs(coord[1] - coord[3]) * 111111 * std::cos((coord[0] - coord[2]) * 0.01745329251);
@@ -108,24 +111,22 @@ const int main(const int argc, const char** argv)
             std::cout << "     image diagonal: \"" << diag << "m" << std::endl;
 
             niirs = metric.calculate_absolute(frame, diag, diag);
+
         }
 
-        std::cout << "     NIIRS for \"" << path << "\": " << niirs << std::endl;
+        std::cout << "     NIIRS for \"" << path << "\": " << pniirs << std::endl;
         csv << "\"" << path << "\"," << niirs << std::endl;
 
-        putText(frame, "NIIRS: " + std::to_string(niirs), Point(40, 40), FONT_HERSHEY_DUPLEX, 1, (0xff, 0xff, 0, 0));
-
-        std::cout << "Dedotated: " << opath << std::endl;
+        putText(frame, "NIIRS: " + std::to_string(niirs), Point(), FONT_HERSHEY_SIMPLEX, 1, (0xff, 0, 0));
         imwrite(opath, frame);
 
-    }
     csv.close();
     std::cout << "Results written to \"" << csv_path << "\"." << std::endl;
     return 0;
 }
 
 
-int main0(int argc, char** argv) {
+   int main0(int argc, char** argv) {
     CNiirsMetric metric;
 
     cv::Mat frame = cv::imread(argv[1]);
@@ -141,7 +142,7 @@ int main0(int argc, char** argv) {
     switch(nirs) {
     case 0:
         std::cout << "PERFECT\n";
-        break;
+		break;
     case 1:
         std::cout << "GOOD\n";
         break;
@@ -150,7 +151,7 @@ int main0(int argc, char** argv) {
         break;
     case 3:
         std::cout << "TERRIBLE\n";
-        break;
+		break;
     }
-    return 0;
+
 }
