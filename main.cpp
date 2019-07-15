@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <chrono>
 #include <string>
 #include <regex>
 #include <math.h>
@@ -169,6 +170,11 @@ const int main_03(const int, const char**)
     VideoCapture cap;
     Mat frame;
 
+    // cap.set(CAP_PROP_FOURCC, fourcc);
+    cap.set(CAP_PROP_FRAME_WIDTH, 1280);
+    cap.set(CAP_PROP_FRAME_HEIGHT, 720);
+    cap.set(CAP_PROP_BUFFERSIZE, 3);
+    cap.set(CAP_PROP_FPS, 60);
     cap.open(0);
 
     if (!cap.isOpened())
@@ -187,9 +193,12 @@ const int main_03(const int, const char**)
 
         imshow("FRAME", frame);
 
+        const auto t_start = std::chrono::high_resolution_clock::now();
         const double niirs = metric.calculate_absolute(frame, 2, 24);
-        
-        std::cout << niirs << std::endl;
+        const auto t_end = std::chrono::high_resolution_clock::now();
+        double ms = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+
+        std::cout << "NIIRS: " << niirs << "    EXECUTION TIME (ms): " << ms << std::endl;
 
         waitKey(1);
     }

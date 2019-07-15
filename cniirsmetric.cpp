@@ -32,31 +32,34 @@ int* testBlocks;
 Mat src; Mat src_gray;
 
 
-std::future<void> async_filter2D(const Mat& src, Mat* dst, const int depth, const Mat& filter, const Point& anchor)
+future<void> async_filter2D(const Mat& src, Mat* dst, const int depth, const Mat& filter, const Point& anchor)
 {
-    return std::async([&]()
-        {
-            *dst = Mat(src.rows, src.cols, depth);
+    return async([&]()
+    {
+        *dst = Mat(src.rows, src.cols, depth);
 
-            filter2D(src, *dst, src.depth(), vSobel, anchor);
-        });
+        filter2D(src, *dst, src.depth(), vSobel, anchor);
+    });
 }
 
 const double CNiirsMetric::RER_BM(const Mat& frame)
 {
     Mat hBlur(frame.rows, frame.cols, CV_8UC1);
     Mat vBlur(frame.rows, frame.cols, CV_8UC1);
-    Mat dFVer(frame.rows, frame.cols, CV_8UC1);
-    Mat dFHor(frame.rows, frame.cols, CV_8UC1);
-    Mat dBVer(frame.rows, frame.cols, CV_8UC1);
-    Mat dBHor(frame.rows, frame.cols, CV_8UC1);
 
     blur(frame, hBlur, Size(9, 1));
     blur(frame, vBlur, Size(1, 9));
-    filter2D(frame, dFVer, frame.depth(), vDiff, Point(0, 1));
-    filter2D(frame, dFHor, frame.depth(), hDiff, Point(1, 0));
-    filter2D(vBlur, dBVer, vBlur.depth(), vDiff, Point(0, 1));
-    filter2D(hBlur, dBHor, hBlur.depth(), hDiff, Point(1, 0));
+
+    Mat dFVer, dFHor, dBVer, dBHor;
+    future<void> await0 = async_filter2D(frame, &dFVer, CV_8UC1, vDiff, Point(0, 1));
+    future<void> await1 = async_filter2D(frame, &dFHor, CV_8UC1, hDiff, Point(1, 0));
+    future<void> await2 = async_filter2D(vBlur, &dBVer, CV_8UC1, vDiff, Point(0, 1));
+    future<void> await3 = async_filter2D(hBlur, &dBHor, CV_8UC1, hDiff, Point(1, 0));
+
+    await0.get();
+    await1.get();
+    await2.get();
+    await3.get();
 
     const Mat dVVer = dFVer - dBVer;
     const Mat dVHor = dFHor - dBHor;
@@ -84,22 +87,25 @@ const double CNiirsMetric::RER_BM(const Mat& frame)
 
 const double CNiirsMetric::RER_EI(const Mat& frame)
 {
-    Mat fFrame, rFrame;
+    Mat fFrame, rFrame, dVer, dHor;
 
     frame.convertTo(fFrame, CV_32F);
 
-    Mat dVer(frame.rows, frame.cols, CV_32F);
-    Mat dHor(frame.rows, frame.cols, CV_32F);
-    
-    filter2D(fFrame, dVer, fFrame.depth(), vSobel, Point(1, 1));
-    filter2D(fFrame, dHor, fFrame.depth(), hSobel, Point(1, 1));
+    future<void> await0 = async_filter2D(fFrame, &dVer, CV_32F, vSobel, Point(1, 1));
+    future<void> await1 = async_filter2D(fFrame, &dHor, CV_32F, hSobel, Point(1, 1));
+
+    await0.get();
+    await1.get();
 
     dVer = dVer.mul(dVer);
     dHor = dHor.mul(dHor);
     dVer = dVer + dHor;
 
-    cv::sqrt(dVer, dHor);
+    future<void> await2 = std::async([&]() { cv::sqrt(dVer, dHor); });
+
     dHor.convertTo(rFrame, CV_8UC1, 1, 128);
+
+    await2.get();
 
     const double sum = cv::sum(dHor)[0];
     const double EI = (1.0 / frame.rows / frame.cols) * sum;
@@ -225,14 +231,13 @@ const double CNiirsMetric::calculate(const Mat& colorFrame)
     cv::cvtColor(colorFrame, frame, CV_BGR2GRAY);    // MISB metrics use grayscale
 
     // async 'n' shiet
-    auto rer_bm__ = std::async(&CNiirsMetric::RER_BM, this, frame);
-    auto rer_ei__ = std::async(&CNiirsMetric::RER_EI, this, frame);
-    auto rer_fr__ = std::async(&CNiirsMetric::RER_FR, this, frame);
+    auto rer_bm__ = async(&CNiirsMetric::RER_BM, this, frame);
+    auto rer_ei__ = async(&CNiirsMetric::RER_EI, this, frame);
 
     // Blur metrics according to MISB
+    const double rer_fr = RER_FR(frame);
     const double rer_bm = rer_bm__.get();
     const double rer_ei = rer_ei__.get();
-    const double rer_fr = rer_fr__.get();
 
     // Average metric outputs
     const double rer = (rer_bm + rer_ei + rer_fr + 0.3) / 4.0;
