@@ -16,17 +16,14 @@
 
 
 
-CBlurMetrics::CBlurMetrics(){
-}
-
-
-double CBlurMetrics::calculate(const cv::Mat& imgGray){
+double CBlurMetrics::calculate(const cv::Mat& imgGray)
+{
     cv::Mat doubleImg;
-    imgGray.convertTo(doubleImg,CV_64F);
+    imgGray.convertTo(doubleImg, CV_64F);
 
     cv::Scalar stdDev, mean;
     double focusMeasure; // = 0.0: (performance) Variable 'focusMeasure' is reassigned a value before the old one has been used.
-    focusMeasure = computeNormalizedVarianceOfGradient(doubleImg,mean,stdDev);
+    focusMeasure = computeNormalizedVarianceOfGradient(doubleImg, mean, stdDev);
     //std::cout << "Mean of Gradient = " <<  mean.val[0] << " StdDev of Gradient = " << stdDev.val[0] << " normalized=" << focusMeasure << std::endl;
 
     /*
@@ -55,13 +52,14 @@ double CBlurMetrics::calculate(const cv::Mat& imgGray){
     return focusMeasure;
 }
 
-double CBlurMetrics::calculate(const cv::Mat& imgGray, std::string fname){
+double CBlurMetrics::calculate(const cv::Mat& imgGray, std::string fname)
+{
     cv::Mat doubleImg;
-    imgGray.convertTo(doubleImg,CV_64F);
+    imgGray.convertTo(doubleImg, CV_64F);
 
     cv::Scalar stdDev, mean;
     double focusMeasure; // = 0.0: (performance) Variable 'focusMeasure' is reassigned a value before the old one has been used.
-    focusMeasure = computeNormalizedVarianceOfGradient(doubleImg,mean,stdDev, fname);
+    focusMeasure = computeNormalizedVarianceOfGradient(doubleImg, mean, stdDev, fname);
     return focusMeasure;
 }
 
@@ -93,7 +91,7 @@ double CBlurMetrics::varianceOfLaplacian(const cv::Mat& doubleImg)
     cv::Scalar mu, sigma;
     cv::meanStdDev(lap, mu, sigma);
 
-    double focusMeasure = sigma.val[0]*sigma.val[0];
+    double focusMeasure = sigma.val[0] * sigma.val[0];
     return focusMeasure;
 }
 
@@ -116,7 +114,7 @@ double CBlurMetrics::normalizedGraylevelVariance(const cv::Mat& doubleImg)
     cv::Scalar mu, sigma;
     cv::meanStdDev(doubleImg, mu, sigma);
 
-    double focusMeasure = (sigma.val[0]*sigma.val[0]) / mu.val[0];
+    double focusMeasure = (sigma.val[0] * sigma.val[0]) / mu.val[0];
 
     //std::cout << "NormalizedGrayLevelVariance: standardDev=" << sigma.val[0] << " mean=" << mu.val[0] << std::endl;
     return focusMeasure;
@@ -127,7 +125,7 @@ double CBlurMetrics::computeVariance(cv::Mat& doubleImg, cv::Scalar& meanVal, cv
 {
     meanVal = cv::mean(doubleImg);
     cv::Mat outImg;
-    cv::subtract(doubleImg,meanVal,outImg);
+    cv::subtract(doubleImg, meanVal, outImg);
     varianceVal = cv::sum(outImg.mul(outImg));
     varianceVal /= (doubleImg.rows * doubleImg.cols);
     return varianceVal.val[0];
@@ -136,16 +134,16 @@ double CBlurMetrics::computeVariance(cv::Mat& doubleImg, cv::Scalar& meanVal, cv
 double CBlurMetrics::computeNormalizedVarianceOfGradient(const cv::Mat& doubleImg, cv::Scalar& mean, cv::Scalar& stdDev)
 {
     cv::Mat sobelGradientY, sobelGradientX;
-    cv::Sobel(doubleImg, sobelGradientX,CV_16S, 1, 0);
+    cv::Sobel(doubleImg, sobelGradientX, CV_16S, 1, 0);
     cv::Sobel(doubleImg, sobelGradientY, CV_16S, 0, 1);
     //cv::Mat absGradX, absGradY;
     //convertScaleAbs(sobelGradientX,absGradX);
     //convertScaleAbs(sobelGradientY,absGradY);
     cv::Mat gradMag;
     //cv::add(absGradX,absGradY,gradMag);
-    cv::add(abs(sobelGradientX),abs(sobelGradientY),gradMag);
+    cv::add(abs(sobelGradientX), abs(sobelGradientY), gradMag);
 
-    cv::meanStdDev(gradMag,mean,stdDev);
+    cv::meanStdDev(gradMag, mean, stdDev);
     return (stdDev.val[0] * stdDev.val[0]) / mean.val[0];
 }
 
@@ -160,7 +158,7 @@ double CBlurMetrics::computeNormalizedVarianceOfGradient(const cv::Mat& doubleIm
     cv::Mat gradMag;
     cv::Mat argh;
     //cv::add(absGradX,absGradY,gradMag);
-    cv::add(abs(sobelGradientX),abs(sobelGradientY),gradMag);
+    cv::add(abs(sobelGradientX), abs(sobelGradientY), gradMag);
 
     gradMag.convertTo(argh, CV_8U);
 
@@ -170,16 +168,17 @@ double CBlurMetrics::computeNormalizedVarianceOfGradient(const cv::Mat& doubleIm
     bool uniform = true; bool accumulate = false;
     cv::Mat b_hist;
     cv::calcHist(&argh, 1, 0, cv::Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate);
-    cv::normalize(b_hist, b_hist, 0, 1, cv::NORM_MINMAX, -1, cv::Mat() );
+    cv::normalize(b_hist, b_hist, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
 
     std::ofstream histOutFile = std::ofstream(fname);
-    for(int i = 0; i < 256; i+=2) {
+    for (int i = 0; i < 256; i += 2)
+    {
         histOutFile << b_hist.at<float>(i) << '\n';
     }
     histOutFile.flush();
     histOutFile.close();
 
-    cv::meanStdDev(gradMag,mean,stdDev);
+    cv::meanStdDev(gradMag, mean, stdDev);
     return (stdDev.val[0] * stdDev.val[0]) / mean.val[0];
 }
 
