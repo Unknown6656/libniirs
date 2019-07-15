@@ -34,12 +34,9 @@ public:
     const double calculate_absolute(const Mat& colorFrame, const double fov_horizontal, const double fov_vertical);
     const double calculate_absolute(const Mat& colorFrame, const double pniirs_theoretical);
 private:
-    const double RER_BM(const Mat&);
-    const double RER_EI(const Mat&);
-    const double RER_FR(const Mat&);
-    const double FR(const Mat&);
-    constexpr const double normalize(const double, const double, const double);
-    constexpr const double clamp(const double, const double, const double);
+    static const double RER_BM(const Mat&);
+    static const double RER_EI(const Mat&);
+    static const double RER_FR(const Mat&);
 };
 
 #endif // CNIIRSMETRIC_H

@@ -29,10 +29,10 @@ const Mat vSobel = (Mat_<char>(3, 3) << 1, 2, 1, 0, 0, 0, -1, -2, -1);
 
 
 int* testBlocks;
-Mat src; Mat src_gray;
+Mat src, src_gray;
 
 
-future<void> async_filter2D(const Mat& src, Mat* dst, const int depth, const Mat& filter, const Point& anchor)
+static future<void> async_filter2D(const Mat& src, Mat* dst, const int depth, const Mat& filter, const Point& anchor)
 {
     return async([&]()
     {
@@ -41,6 +41,17 @@ future<void> async_filter2D(const Mat& src, Mat* dst, const int depth, const Mat
         filter2D(src, *dst, src.depth(), vSobel, anchor);
     });
 }
+
+static constexpr const double normalize(const double value, const double min_bound, const double max_bound)
+{
+    return 3.0 * (value - max_bound) / (max_bound - min_bound);
+}
+
+static constexpr const double clamp(const double value, const double min, const double max)
+{
+    return value < min ? min : value > max ? max : value;
+}
+
 
 const double CNiirsMetric::RER_BM(const Mat& frame)
 {
@@ -67,16 +78,15 @@ const double CNiirsMetric::RER_BM(const Mat& frame)
 
     cv::normalize(dVVer, nVVer, 0, 255, NORM_MINMAX);
 
-    double vMax, hMax;
-    
-    minMaxLoc(dVVer, NULL, &vMax);
-    minMaxLoc(dVHor, NULL, &hMax);
+    future<double> await4 = async([&]() { return cv::sum(dFVer)[0]; });
+    future<double> await5 = async([&]() { return cv::sum(dFHor)[0]; });
+    future<double> await6 = async([&]() { return cv::sum(dVVer)[0]; });
+    future<double> await7 = async([&]() { return cv::sum(dVHor)[0]; });
 
-    const double sFVer = cv::sum(dFVer)[0];
-    const double sFHor = cv::sum(dFHor)[0];
-    const double sVVer = cv::sum(dVVer)[0];
-    const double sVHor = cv::sum(dVHor)[0];
-
+    const double sFVer = await4.get();
+    const double sFHor = await5.get();
+    const double sVVer = await6.get();
+    const double sVHor = await7.get();
     const double bFVer = (sFVer == 0) ? 0 : (sFVer - sVVer) / sFVer;
     const double bFHor = (sFHor == 0) ? 0 : (sFHor - sVHor) / sFHor;
 
@@ -87,7 +97,7 @@ const double CNiirsMetric::RER_BM(const Mat& frame)
 
 const double CNiirsMetric::RER_EI(const Mat& frame)
 {
-    Mat fFrame, rFrame, dVer, dHor;
+    Mat fFrame, dVer, dHor;
 
     frame.convertTo(fFrame, CV_32F);
 
@@ -102,8 +112,6 @@ const double CNiirsMetric::RER_EI(const Mat& frame)
     dVer = dVer + dHor;
 
     future<void> await2 = std::async([&]() { cv::sqrt(dVer, dHor); });
-
-    dHor.convertTo(rFrame, CV_8UC1, 1, 128);
 
     await2.get();
 
@@ -132,96 +140,39 @@ const double CNiirsMetric::RER_FR(const Mat& I)
 
     merge(planes, 2, complexI); // Add to the expanded another plane with zeros
     dft(complexI, complexI); // this way the result may fit in the source matrix
-
     // compute the magnitude and switch to logarithmic scale
     // => log(1 + sqrt(Re(DFT(I))^2 + Im(DFT(I))^2))
     split(complexI, planes); // planes[0] = Re(DFT(I), planes[1] = Im(DFT(I))
     // rearrange the quadrants of Fourier image  so that the origin is at the image center
     magnitude(planes[0], planes[1], planes[0]);// planes[0] = magnitude
 
-    const Mat magI = planes[0];
-    const Mat normSquareI = magI.mul(magI);
-    double min, max;
+    const Mat norm2I = planes[0].mul(planes[0]);
+    const int REG_COUNT = 3;
+    const Rect regions[REG_COUNT] =
+    {
+        Rect(0, 0, lowPassSize, lowPassSize), // Top-Left - Create a ROI per quadrant
+        Rect(windowsize - lowPassSize, 0, lowPassSize, lowPassSize), // Top-Right
+        Rect(0, windowsize - lowPassSize, lowPassSize, lowPassSize), // Top-Left - Create a ROI per quadrant
+//      Rect(windowsize - lowPassSize, windowsize - lowPassSize, lowPassSize, lowPassSize), // Top-Right
+    };
+    future<double> q[REG_COUNT];
 
-    minMaxLoc(normSquareI, &min, &max);
+    for (int i = 0; i < REG_COUNT; ++i)
+        q[i] = async([&]()
+        {
+            return cv::sum(norm2I(regions[i]))[0];
+        });
 
-    const Mat q0(normSquareI, Rect(0, 0, lowPassSize, lowPassSize)); // Top-Left - Create a ROI per quadrant
-    const Mat q1(normSquareI, Rect(windowsize - lowPassSize, 0, lowPassSize, lowPassSize)); // Top-Right
-    const Mat q2(normSquareI, Rect(0, windowsize - lowPassSize, lowPassSize, lowPassSize)); // Top-Left - Create a ROI per quadrant
-    const Mat q3(normSquareI, Rect(windowsize - lowPassSize, windowsize - lowPassSize, lowPassSize, lowPassSize)); // Top-Right
-
-    const double lowPass = cv::sum(q0)[0] + cv::sum(q1)[0] + cv::sum(q2)[0]; // + cv::sum(q3)[0];
-    const double allPass = cv::sum(normSquareI)[0];
+    const double q0 = q[0].get();
+    const double q1 = q[1].get();
+    const double q2 = q[2].get();
+//  const double q3 = q[3].get();
+    const double lowPass = q0 + q1 + q2; // + q3;
+    const double allPass = cv::sum(norm2I)[0];
     const double highPass = allPass - lowPass;
     const double fr = (lowPass == 0) ? 0 : highPass / lowPass;
 
     return -0.26 + 3 * pow(fr, 0.25);
-}
-
-const double percentile(const Mat frame, const double percentile_number)
-{
-    const int kernel_size = 3;
-    const int scale = 1;
-    const int delta = 0;
-    const int ddepth = CV_16S;
-    Mat src_gray, dst;
-
-    if (!frame.data)
-        return -1;
-
-    GaussianBlur(frame, frame, Size(3, 3), 0, 0, BORDER_DEFAULT);    // Remove noise by blurring with a Gaussian filter
-
-    src_gray = frame;
-
-    // Apply Laplace function
-    Mat abs_dst, norm_abs_dst;
-
-    Laplacian(src_gray, dst, ddepth, kernel_size, scale, delta, BORDER_DEFAULT);
-    convertScaleAbs(dst, abs_dst);
-    normalize(abs_dst, norm_abs_dst, 0, 200, NORM_MINMAX);
-
-    const int histSize = 256;    // Establish the number of bins
-    const float range[] = { 0, 255 };    // Set the ranges ( for B,G,R) )
-    const float* histRange = { range };
-    const bool uniform = true;
-    const bool accumulate = false;
-    Mat b_hist;
-
-    calcHist(&abs_dst, 1, 0, Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate); // Compute the histograms
-
-    double totalCount = 0;
-    double mean = 0;
-
-    for (int i = 0; i < 256; i++)
-    {
-        totalCount += b_hist.at<float>(i);
-        mean += i * b_hist.at<float>(i);
-    }
-    
-    mean /= totalCount;
-
-    double percCount = totalCount;
-    int percentile_position = 255;
-
-    for (; percentile_position >= 0; percentile_position--)
-    {
-        percCount -= b_hist.at<float>(percentile_position);
-
-        if (percCount / totalCount < percentile_number)
-            break;
-    }
-
-    return percentile_position / mean;
-}
-
-constexpr const double CNiirsMetric::normalize(const double value, const double min_bound, const double max_bound)
-{
-    return 3.0 * (value - max_bound) / (max_bound - min_bound);
-}
-
-constexpr const double CNiirsMetric::clamp(const double value, const double min, const double max)
-{
-    return value < min ? min : value > max ? max : value;
 }
 
 const double CNiirsMetric::calculate(const Mat& colorFrame)
@@ -231,8 +182,8 @@ const double CNiirsMetric::calculate(const Mat& colorFrame)
     cv::cvtColor(colorFrame, frame, CV_BGR2GRAY);    // MISB metrics use grayscale
 
     // async 'n' shiet
-    auto rer_bm__ = async(&CNiirsMetric::RER_BM, this, frame);
-    auto rer_ei__ = async(&CNiirsMetric::RER_EI, this, frame);
+    auto rer_bm__ = async(&RER_BM, frame);
+    auto rer_ei__ = async(&RER_EI, frame);
 
     // Blur metrics according to MISB
     const double rer_fr = RER_FR(frame);
