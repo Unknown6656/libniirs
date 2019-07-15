@@ -13,6 +13,12 @@
     <ClCompile Include="cniirsmetric.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CBlurMetrics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libniirs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="bin\opencv_world410.dll" />
@@ -22,5 +28,20 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cniirsmetric.h" />
+    <ClInclude Include="CBlurMetrics.h" />
+    <ClInclude Include="libniirs.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="data\19-frame203129.jpg" />
+    <Image Include="data\19-frame203129.png" />
+    <Image Include="data\42.PNG" />
+    <Image Include="data\2460.jpg" />
+    <Image Include="data\bad.png" />
+    <Image Include="data\green.png" />
+    <Image Include="data\red.png" />
+    <Image Include="data\yellow.png" />
   </ItemGroup>
 </Project>
