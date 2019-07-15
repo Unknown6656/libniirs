@@ -188,10 +188,10 @@ const int main_03(const int, const char**)
         imshow("FRAME", frame);
 
         const double niirs = metric.calculate_absolute(frame, 2, 24);
-
+        
         std::cout << niirs << std::endl;
 
-        waitKey();
+        waitKey(1);
     }
 }
 

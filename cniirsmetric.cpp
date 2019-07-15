@@ -1,5 +1,6 @@
 #pragma once
 
+#include <future>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -30,6 +31,16 @@ const Mat vSobel = (Mat_<char>(3, 3) << 1, 2, 1, 0, 0, 0, -1, -2, -1);
 int* testBlocks;
 Mat src; Mat src_gray;
 
+
+std::future<void> async_filter2D(const Mat& src, Mat* dst, const int depth, const Mat& filter, const Point& anchor)
+{
+    return std::async([&]()
+        {
+            *dst = Mat(src.rows, src.cols, depth);
+
+            filter2D(src, *dst, src.depth(), vSobel, anchor);
+        });
+}
 
 const double CNiirsMetric::RER_BM(const Mat& frame)
 {
@@ -109,8 +120,7 @@ const double CNiirsMetric::RER_FR(const Mat& I)
     const int x = I.cols / 2;
     const int y = I.rows / 2;
     const int lowPassSize = (int)(windowsize * 0.15);
-
-    const Mat padded = I(Rect(x - windowradius, y - windowradius, windowsize, windowsize)); //expand input image to optimal size
+    const Mat padded = I(Rect(x - windowradius, y - windowradius, windowsize, windowsize)); // expand input image to optimal size
     Mat planes[] = { Mat_<float>(padded), Mat::zeros(padded.size(), CV_32F) };
     Mat complexI;
 
@@ -214,10 +224,15 @@ const double CNiirsMetric::calculate(const Mat& colorFrame)
 
     cv::cvtColor(colorFrame, frame, CV_BGR2GRAY);    // MISB metrics use grayscale
 
+    // async 'n' shiet
+    auto rer_bm__ = std::async(&CNiirsMetric::RER_BM, this, frame);
+    auto rer_ei__ = std::async(&CNiirsMetric::RER_EI, this, frame);
+    auto rer_fr__ = std::async(&CNiirsMetric::RER_FR, this, frame);
+
     // Blur metrics according to MISB
-    const double rer_bm = RER_BM(frame);
-    const double rer_ei = RER_EI(frame);
-    const double rer_fr = RER_FR(frame);
+    const double rer_bm = rer_bm__.get();
+    const double rer_ei = rer_ei__.get();
+    const double rer_fr = rer_fr__.get();
 
     // Average metric outputs
     const double rer = (rer_bm + rer_ei + rer_fr + 0.3) / 4.0;
