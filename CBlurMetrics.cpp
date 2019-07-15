@@ -1,20 +1,20 @@
+#pragma once
+
 #include "CBlurMetrics.h"
 
-
 #include <iostream>
-
-// OpenCV stuff
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <memory>
 #include <fstream>
 #include <string>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
+
 
 CBlurMetrics::CBlurMetrics(){
 }

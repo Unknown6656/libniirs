@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -10,17 +12,24 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 
-// #include "libniirs.cpp"
 #include "cniirsmetric.h"
+
 
 using namespace cv;
 namespace fs = std::experimental::filesystem;
 
-const int main(const int argc, const char** argv)
+#define ENTRY_POINT main_03
+
+
+/*  Command line:
+ *      ./libniirs <inputdir> <outputdir>
+ */
+const int main_01(const int argc, const char** argv)
 {
     if (argc < 3)
     {
         std::cout << "At least two parameters are required (the input and output directories).";
+
         return -1;
     }
 
@@ -124,8 +133,7 @@ const int main(const int argc, const char** argv)
     return 0;
 }
 
-
-int main0(int argc, char** argv) {
+const int main_02(const int argc, const char** argv) {
     CNiirsMetric metric;
 
     cv::Mat frame = cv::imread(argv[1]);
@@ -153,4 +161,44 @@ int main0(int argc, char** argv) {
         break;
     }
     return 0;
+}
+
+const int main_03(const int, const char**)
+{
+    CNiirsMetric metric;
+    VideoCapture cap;
+    Mat frame;
+
+    cap.open(0);
+
+    if (!cap.isOpened())
+    {
+        std::cerr << "ERROR! Unable to open camera\n";
+
+        return -1;
+    }
+
+    while (true)
+    {
+        cap >> frame;
+
+        if (frame.empty())
+            continue;
+
+        imshow("FRAME", frame);
+
+        const double niirs = metric.calculate_absolute(frame, 2, 24);
+
+        std::cout << niirs << std::endl;
+
+        waitKey();
+    }
+}
+
+
+
+
+const int main(const int argc, const char** argv)
+{
+    return ENTRY_POINT(argc, argv);
 }

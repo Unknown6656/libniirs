@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef CBLURMETRICS_H
 #define CBLURMETRICS_H
 

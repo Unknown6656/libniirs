@@ -1,13 +1,17 @@
-#include "cniirsmetric.h"
-#include "opencv2/imgproc.hpp"
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/highgui.hpp"
+#pragma once
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <math.h>
 
-//
+#include "cniirsmetric.h"
+
+#include "opencv2/imgproc.hpp"
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/highgui.hpp"
+
+
 #define NIIRS_MIN 3.004
 #define NIIRS_MAX 4.48925
 #define EIR_MIN 3.18458
