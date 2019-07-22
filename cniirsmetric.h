@@ -3,24 +3,17 @@
 #ifndef CNIIRSMETRIC_H
 #define CNIIRSMETRIC_H
 
-#include "opencv2/imgproc.hpp"
+#include "niirsmetric.h"
 
 
-using namespace cv;
-
-class CNiirsMetric
+class CNiirsMetric : public MetricBase
 {
 public:
     CNiirsMetric()
+        : MetricBase()
     {
     }
 
-    /**
-     * Calculates an estimate for the instantaneous image quality. This calculation is independent from FOV and essentially provides an estimate of image degradation in respect to the true scene.
-     * 
-     * @param colorFrame: A cv::Mat representing the frame to analyze. Runs cv::BGRToGray internally.
-     * @return The quality estimate. Range: 0 (best) to -3 (worst).
-     */
     const double calculate(const Mat& colorFrame);
 
     /**
@@ -39,4 +32,4 @@ private:
     static const double RER_FR(const Mat&);
 };
 
-#endif // CNIIRSMETRIC_H
+#endif

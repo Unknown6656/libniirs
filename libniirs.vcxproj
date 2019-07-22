@@ -101,9 +101,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CBlurMetrics.cpp" />
     <ClCompile Include="cniirsmetric.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="viniirsmetric.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -112,8 +112,9 @@
     <None Include="bin\opencv_world346d.dll" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CBlurMetrics.h" />
     <ClInclude Include="cniirsmetric.h" />
+    <ClInclude Include="niirsmetric.h" />
+    <ClInclude Include="vniirsmetric.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

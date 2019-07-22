@@ -13,7 +13,7 @@
     <ClCompile Include="cniirsmetric.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CBlurMetrics.cpp">
+    <ClCompile Include="viniirsmetric.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -25,7 +25,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cniirsmetric.h" />
-    <ClInclude Include="CBlurMetrics.h" />
+    <ClInclude Include="vniirsmetric.h" />
+    <ClInclude Include="niirsmetric.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
