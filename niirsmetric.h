@@ -13,7 +13,8 @@
 
 using namespace cv;
 
-class MetricBase
+
+class NIIRSMetricBase
 {
 public:
     /**
@@ -23,6 +24,18 @@ public:
      * @return The quality estimate. Range: 0 (best) to -3 (worst).
      */
     virtual const double calculate(const Mat& colorFrame) = 0;
+
+protected:
+    static const double RER_BM(const Mat&);
+    static const double RER_EI(const Mat&);
+    static const double RER_FR(const Mat&);
+
+    static inline std::future<void> async_filter2D(const Mat&, Mat*, const int, const Mat&, const Point&);
+    static inline constexpr const double normalize(const double, const double, const double);
+    static inline constexpr const double clamp(const double value, const double min, const double max)
+    {
+        return value < min ? min : value > max ? max : value;
+    }
 };
 
 #endif

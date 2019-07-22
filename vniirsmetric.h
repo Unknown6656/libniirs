@@ -6,11 +6,11 @@
 #include "niirsmetric.h"
 
 
-class VNiirsMetric : public MetricBase
+class VNIIRSMetric : public NIIRSMetricBase
 {
 public:
-    VNiirsMetric()
-        : MetricBase()
+    VNIIRSMetric()
+        : NIIRSMetricBase()
     {
     }
 

@@ -16,6 +16,9 @@
     <ClCompile Include="viniirsmetric.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="niirsmetric.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
