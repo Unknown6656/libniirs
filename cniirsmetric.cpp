@@ -21,7 +21,7 @@ int* testBlocks;
 Mat src, src_gray;
 
 
-const double CNiirsMetric::calculate(const Mat& colorFrame)
+const double CNIIRSMetric::calculate(const Mat& colorFrame)
 {
     Mat frame;
 
@@ -44,21 +44,17 @@ const double CNiirsMetric::calculate(const Mat& colorFrame)
     return clamp(blurriness, 0, 3);
 }
 
-const double CNiirsMetric::calculate_absolute(const Mat& colorFrame, const double fov_horizontal, const double fov_vertical)
+const double CNIIRSMetric::calculate_absolute(const Mat& colorFrame, const double fov_horizontal, const double fov_vertical)
 {
-    const int res_horizontal = colorFrame.cols;
-    const int res_vertical = colorFrame.rows;
-    // Use larger GSD to anticipate shallow viewing angles
-    const double gsd_max = (fov_horizontal > fov_vertical) ? fov_horizontal / res_horizontal : fov_vertical / res_vertical;
-
     // Calculate MISB-like blur metrics
     const double blurriness = calculate(colorFrame); // [0..3]
+    const double gsd = calculate_gsd(colorFrame, fov_horizontal, fov_vertical);
 
     // Bring into absulte form
-    return 5.0 - log2(gsd_max) - blurriness;
+    return 5.0 - log2(gsd) - blurriness;
 }
 
-const double CNiirsMetric::calculate_absolute(const Mat& colorFrame, const double pniirs_theoretical)
+const double CNIIRSMetric::calculate_absolute(const Mat& colorFrame, const double pniirs_theoretical)
 {
     const double blurriness = calculate(colorFrame); // [0..3]
 

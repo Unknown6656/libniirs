@@ -13,10 +13,10 @@
     <ClCompile Include="cniirsmetric.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="viniirsmetric.cpp">
+    <ClCompile Include="niirsmetric.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="niirsmetric.cpp">
+    <ClCompile Include="cviniirsmetric.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -28,8 +28,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cniirsmetric.h" />
-    <ClInclude Include="vniirsmetric.h" />
     <ClInclude Include="niirsmetric.h" />
+    <ClInclude Include="cvniirsmetric.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

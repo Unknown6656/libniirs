@@ -17,18 +17,21 @@ using namespace cv;
 class NIIRSMetricBase
 {
 public:
-    /**
-     * Calculates an estimate for the instantaneous image quality. This calculation is independent from FOV and essentially provides an estimate of image degradation in respect to the true scene.
-     *
-     * @param colorFrame: A cv::Mat representing the frame to analyze. Runs cv::BGRToGray internally.
-     * @return The quality estimate. Range: 0 (best) to -3 (worst).
-     */
-    virtual const double calculate(const Mat& colorFrame) = 0;
+    virtual const double calculate_absolute(const Mat&, const double, const double) = 0;
 
 protected:
     static const double RER_BM(const Mat&);
     static const double RER_EI(const Mat&);
     static const double RER_FR(const Mat&);
+
+    static const double calculate_gsd(const Mat& colorFrame, const double fov_horizontal, const double fov_vertical)
+    {
+        const int res_horizontal = colorFrame.cols;
+        const int res_vertical = colorFrame.rows;
+
+        // Use larger GSD to anticipate shallow viewing angles
+        return (fov_horizontal > fov_vertical) ? fov_horizontal / res_horizontal : fov_vertical / res_vertical;
+    }
 
     static inline std::future<void> async_filter2D(const Mat&, Mat*, const int, const Mat&, const Point&);
     static inline constexpr const double normalize(const double, const double, const double);

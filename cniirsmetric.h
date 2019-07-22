@@ -6,16 +6,21 @@
 #include "niirsmetric.h"
 
 
-class CNiirsMetric : public NIIRSMetricBase
+class CNIIRSMetric : public NIIRSMetricBase
 {
 public:
-    CNiirsMetric()
+    CNIIRSMetric()
         : NIIRSMetricBase()
     {
     }
 
+    /**
+     * Calculates an estimate for the instantaneous image quality. This calculation is independent from FOV and essentially provides an estimate of image degradation in respect to the true scene.
+     *
+     * @param colorFrame: A cv::Mat representing the frame to analyze. Runs cv::BGRToGray internally.
+     * @return The quality estimate. Range: 0 (best) to -3 (worst).
+     */
     const double calculate(const Mat& colorFrame);
-
     /**
      * Estimates instantaneous Video-NIIRS level of the frame provided. Uses information about the current field-of-view of the observer to calculate the absolute Ground Resolvable Distance (GRD) and returns the associated (logarithmic) NIIRS level.
      *

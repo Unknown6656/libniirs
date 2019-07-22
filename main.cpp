@@ -14,12 +14,13 @@
 #include <opencv2/highgui.hpp>
 
 #include "cniirsmetric.h"
+#include "cvniirsmetric.h"
 
 
 using namespace cv;
 namespace fs = std::experimental::filesystem;
 
-#define ENTRY_POINT main_03
+#define ENTRY_POINT main_04
 
 
 /*  Command line:
@@ -41,7 +42,7 @@ const int main_01(const int argc, const char** argv)
     const std::regex reg_wl("\\$PMJC3,([0-9\\.]+),([0-9\\.]+),([0-9\\.]+),([0-9\\.]+),([0-9\\.]+),([0-9\\.]+),([0-9\\.]+),([0-9\\.]+)");
     std::smatch match;
     std::ofstream csv(csv_path);
-    CNiirsMetric metric;
+    CNIIRSMetric metric;
 
     for (const auto& entry : fs::directory_iterator(dir_in))
     {
@@ -135,7 +136,7 @@ const int main_01(const int argc, const char** argv)
 }
 
 const int main_02(const int argc, const char** argv) {
-    CNiirsMetric metric;
+    CNIIRSMetric metric;
 
     cv::Mat frame = cv::imread(argv[1]);
 
@@ -166,7 +167,7 @@ const int main_02(const int argc, const char** argv) {
 
 const int main_03(const int, const char**)
 {
-    CNiirsMetric metric;
+    CNIIRSMetric metric;
     VideoCapture cap;
     Mat frame;
 
@@ -202,6 +203,16 @@ const int main_03(const int, const char**)
 
         waitKey(1);
     }
+}
+
+const int main_04(const int, const char**)
+{
+    CVNIIRSMetric metric;
+    Mat frame = imread("../data/2460.jpg");
+
+    metric.calculate_absolute(frame, 300, 200);
+
+    return 0;
 }
 
 

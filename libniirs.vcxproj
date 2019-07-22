@@ -106,7 +106,7 @@
     <ClCompile Include="cniirsmetric.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="niirsmetric.cpp" />
-    <ClCompile Include="viniirsmetric.cpp" />
+    <ClCompile Include="cviniirsmetric.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -117,7 +117,7 @@
   <ItemGroup>
     <ClInclude Include="cniirsmetric.h" />
     <ClInclude Include="niirsmetric.h" />
-    <ClInclude Include="vniirsmetric.h" />
+    <ClInclude Include="cvniirsmetric.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

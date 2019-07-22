@@ -27,7 +27,6 @@ constexpr const double NIIRSMetricBase::normalize(const double value, const doub
     return 3.0 * (value - max_bound) / (max_bound - min_bound);
 }
 
-
 const double NIIRSMetricBase::RER_BM(const Mat& frame)
 {
     Mat hBlur(frame.rows, frame.cols, CV_8UC1);
@@ -134,9 +133,9 @@ const double NIIRSMetricBase::RER_FR(const Mat& I)
 
     for (int i = 0; i < REG_COUNT; ++i)
         q[i] = async([&]()
-            {
-                return cv::sum(norm2I(regions[i]))[0];
-            });
+        {
+            return cv::sum(norm2I(regions[i]))[0];
+        });
 
     const double q0 = q[0].get();
     const double q1 = q[1].get();
